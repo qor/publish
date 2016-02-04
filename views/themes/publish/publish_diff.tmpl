@@ -17,7 +17,7 @@
     {{$diff := or (not $has_production) (not (equal $production_value $draft_value))}}
 
     <div class="mdl-grid{{if $diff}} is-changed{{end}}">
-      <div class="mdl-cell mdl-cell--2-col">{{dt (printf "%v.attributes.%v" $res.ToParam $meta.Label) $meta.Label}}</div>
+      <div class="mdl-cell mdl-cell--2-col">{{t (printf "%v.attributes.%v" $res.ToParam $meta.Label) $meta.Label}}</div>
       <div class="mdl-cell mdl-cell--5-col">{{$draft_value}}</div>
       <div class="mdl-cell mdl-cell--5-col">{{if $has_production}}{{$production_value}}{{end}}</div>
     </div>

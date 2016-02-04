@@ -30,7 +30,7 @@
               </th>
 
               {{range $meta := $metas}}
-              <th class="mdl-data-table__cell--non-numeric">{{dt (printf "%v.attributes.%v" $res.ToParam $meta.Label) $meta.Label}}</th>
+              <th class="mdl-data-table__cell--non-numeric">{{t (printf "%v.attributes.%v" $res.ToParam $meta.Label) $meta.Label}}</th>
               {{end}}
 
               {{if not $isPublishEvent}}
