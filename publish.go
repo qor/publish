@@ -53,7 +53,8 @@ func (s Status) ConfigureQorResource(res resource.Resourcer) {
 }
 
 type Publish struct {
-	DB *gorm.DB
+	DB             *gorm.DB
+	deleteCallback func(*gorm.Scope)
 }
 
 func IsDraftMode(db *gorm.DB) bool {
@@ -124,6 +125,7 @@ func New(db *gorm.DB) *Publish {
 	db.Callback().Create().Before("gorm:commit_or_rollback_transaction").Register("gorm:create_publish_event", createPublishEvent)
 
 	db.Callback().Delete().Before("gorm:begin_transaction").Register("publish:set_table_to_draft", setTableAndPublishStatus(true))
+	deleteCallback := db.Callback().Delete().Get("gorm:delete")
 	db.Callback().Delete().Replace("gorm:delete", deleteScope)
 	db.Callback().Delete().Before("gorm:commit_or_rollback_transaction").
 		Register("publish:sync_to_production_after_delete", syncDeleteFromProductionToDraft)
@@ -136,7 +138,7 @@ func New(db *gorm.DB) *Publish {
 
 	db.Callback().RowQuery().Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
 	db.Callback().Query().Before("gorm:query").Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
-	return &Publish{DB: db}
+	return &Publish{DB: db, deleteCallback: deleteCallback}
 }
 
 func DraftTableName(table string) string {
