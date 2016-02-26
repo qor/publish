@@ -9,9 +9,8 @@ type publishJoinTableHandler struct {
 func (handler publishJoinTableHandler) Table(db *gorm.DB) string {
 	if IsDraftMode(db) {
 		return handler.TableName + "_draft"
-	} else {
-		return handler.TableName
 	}
+	return handler.TableName
 }
 
 func (handler publishJoinTableHandler) Add(h gorm.JoinTableHandlerInterface, db *gorm.DB, source1 interface{}, source2 interface{}) error {

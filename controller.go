@@ -99,6 +99,7 @@ func (db *publishController) PublishOrDiscard(context *admin.Context) {
 	http.Redirect(context.Writer, context.Request, context.Request.RequestURI, http.StatusFound)
 }
 
+// ConfigureQorResource configure qor resource for qor admin
 func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
 	if res, ok := res.(*admin.Resource); ok {
 		admin.RegisterViewPath("github.com/qor/publish/views")

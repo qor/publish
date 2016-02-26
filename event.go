@@ -7,6 +7,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// EventInterface defined methods needs for a publish event
 type EventInterface interface {
 	Publish(db *gorm.DB, event PublishEventInterface) error
 	Discard(db *gorm.DB, event PublishEventInterface) error
@@ -14,10 +15,12 @@ type EventInterface interface {
 
 var events = map[string]EventInterface{}
 
+// RegisterEvent register publish event
 func RegisterEvent(name string, event EventInterface) {
 	events[name] = event
 }
 
+// PublishEvent default publish event model
 type PublishEvent struct {
 	gorm.Model
 	Name          string
@@ -42,6 +45,7 @@ func getCurrentUser(db *gorm.DB) (string, bool) {
 	return "", false
 }
 
+// Publish publish data
 func (publishEvent *PublishEvent) Publish(db *gorm.DB) error {
 	if event, ok := events[publishEvent.Name]; ok {
 		err := event.Publish(db, publishEvent)
@@ -57,6 +61,7 @@ func (publishEvent *PublishEvent) Publish(db *gorm.DB) error {
 	return errors.New("event not found")
 }
 
+// Discard discard data
 func (publishEvent *PublishEvent) Discard(db *gorm.DB) error {
 	if event, ok := events[publishEvent.Name]; ok {
 		err := event.Discard(db, publishEvent)
@@ -72,6 +77,7 @@ func (publishEvent *PublishEvent) Discard(db *gorm.DB) error {
 	return errors.New("event not found")
 }
 
+// VisiblePublishResource force to display publish event in publish drafts even it is hidden in the menus
 func (PublishEvent) VisiblePublishResource() bool {
 	return true
 }

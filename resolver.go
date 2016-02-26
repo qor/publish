@@ -178,21 +178,21 @@ func (resolver *resolver) Publish() error {
 
 		if len(dep.PrimaryValues) > 0 {
 			// set status to published
-			updateStateSql := fmt.Sprintf("UPDATE %v SET publish_status = ? WHERE %v IN (%v)", draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))
+			updateStateSQL := fmt.Sprintf("UPDATE %v SET publish_status = ? WHERE %v IN (%v)", draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))
 
 			var params = []interface{}{bool(PUBLISHED)}
 			params = append(params, toQueryValues(dep.PrimaryValues)...)
-			tx.Exec(updateStateSql, params...)
+			tx.Exec(updateStateSQL, params...)
 
 			// delete old records
-			deleteSql := fmt.Sprintf("DELETE FROM %v WHERE %v IN (%v)", productionTable, productionPrimaryKey, toQueryMarks(dep.PrimaryValues))
-			tx.Exec(deleteSql, toQueryValues(dep.PrimaryValues)...)
+			deleteSQL := fmt.Sprintf("DELETE FROM %v WHERE %v IN (%v)", productionTable, productionPrimaryKey, toQueryMarks(dep.PrimaryValues))
+			tx.Exec(deleteSQL, toQueryValues(dep.PrimaryValues)...)
 
 			// insert new records
-			publishSql := fmt.Sprintf("INSERT INTO %v (%v) SELECT %v FROM %v WHERE %v IN (%v)",
+			publishSQL := fmt.Sprintf("INSERT INTO %v (%v) SELECT %v FROM %v WHERE %v IN (%v)",
 				productionTable, strings.Join(productionColumns, " ,"), strings.Join(draftColumns, " ,"),
 				draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))
-			tx.Exec(publishSql, toQueryValues(dep.PrimaryValues)...)
+			tx.Exec(publishSQL, toQueryValues(dep.PrimaryValues)...)
 
 			// publish join table data
 			for _, relationship := range dep.ManyToManyRelations {
@@ -229,20 +229,20 @@ func (resolver *resolver) Publish() error {
 					draftJoinTableColumns = append(draftJoinTableColumns, productionScope.Quote(column))
 				}
 
-				publishSql := fmt.Sprintf("INSERT INTO %v (%v) SELECT %v FROM %v WHERE %v IN (%v)",
+				publishSQL := fmt.Sprintf("INSERT INTO %v (%v) SELECT %v FROM %v WHERE %v IN (%v)",
 					productionTable, strings.Join(productionJoinTableColumns, " ,"), strings.Join(draftJoinTableColumns, " ,"),
 					draftTable, draftCondition, toQueryMarks(dep.PrimaryValues, relationship.ForeignFieldNames...))
-				tx.Exec(publishSql, toQueryValues(dep.PrimaryValues, relationship.ForeignFieldNames...)...)
+				tx.Exec(publishSQL, toQueryValues(dep.PrimaryValues, relationship.ForeignFieldNames...)...)
 			}
 		}
 	}
 
-	if err := tx.Error; err == nil {
+	if err = tx.Error; err == nil {
 		return tx.Commit().Error
-	} else {
-		tx.Rollback()
-		return err
 	}
+
+	tx.Rollback()
+	return err
 }
 
 func (resolver *resolver) Discard() error {
@@ -279,8 +279,8 @@ func (resolver *resolver) Discard() error {
 
 		if len(dep.PrimaryValues) > 0 {
 			// delete data from draft db
-			deleteSql := fmt.Sprintf("DELETE FROM %v WHERE %v IN (%v)", draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))
-			tx.Exec(deleteSql, toQueryValues(dep.PrimaryValues)...)
+			deleteSQL := fmt.Sprintf("DELETE FROM %v WHERE %v IN (%v)", draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))
+			tx.Exec(deleteSQL, toQueryValues(dep.PrimaryValues)...)
 
 			// delete join table
 			for _, relationship := range dep.ManyToManyRelations {
@@ -317,27 +317,26 @@ func (resolver *resolver) Discard() error {
 					draftJoinTableColumns = append(draftJoinTableColumns, productionScope.Quote(column))
 				}
 
-				publishSql := fmt.Sprintf("INSERT INTO %v (%v) SELECT %v FROM %v WHERE %v IN (%v)",
+				publishSQL := fmt.Sprintf("INSERT INTO %v (%v) SELECT %v FROM %v WHERE %v IN (%v)",
 					draftTable, strings.Join(draftJoinTableColumns, " ,"), strings.Join(productionJoinTableColumns, " ,"),
 					productionTable, productionCondition, toQueryMarks(dep.PrimaryValues, relationship.ForeignFieldNames...))
-				tx.Exec(publishSql, toQueryValues(dep.PrimaryValues, relationship.ForeignFieldNames...)...)
+				tx.Exec(publishSQL, toQueryValues(dep.PrimaryValues, relationship.ForeignFieldNames...)...)
 			}
 
 			// copy data from production to draft
-			discardSql := fmt.Sprintf("INSERT INTO %v (%v) SELECT %v FROM %v WHERE %v IN (%v)",
+			discardSQL := fmt.Sprintf("INSERT INTO %v (%v) SELECT %v FROM %v WHERE %v IN (%v)",
 				draftTable, strings.Join(draftColumns, " ,"),
 				strings.Join(productionColumns, " ,"), productionTable,
 				productionPrimaryKey, toQueryMarks(dep.PrimaryValues))
-			tx.Exec(discardSql, toQueryValues(dep.PrimaryValues)...)
+			tx.Exec(discardSQL, toQueryValues(dep.PrimaryValues)...)
 		}
 	}
 
-	if err := tx.Error; err == nil {
+	if err = tx.Error; err == nil {
 		return tx.Commit().Error
-	} else {
-		tx.Rollback()
-		return err
 	}
+	tx.Rollback()
+	return err
 }
 
 func scopePrimaryKeys(scope *gorm.Scope, tableName string) string {
@@ -360,9 +359,8 @@ func toQueryCondition(scope *gorm.Scope, columns []string) string {
 
 	if len(columns) > 1 {
 		return fmt.Sprintf("(%v)", strings.Join(newColumns, ","))
-	} else {
-		return strings.Join(columns, ",")
 	}
+	return strings.Join(columns, ",")
 }
 
 func toQueryMarks(primaryValues [][][]interface{}, columns ...string) string {

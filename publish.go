@@ -12,8 +12,10 @@ import (
 )
 
 const (
+	// PUBLISHED publish status published
 	PUBLISHED = false
-	DIRTY     = true
+	// DIRTY publish status dirty
+	DIRTY = true
 
 	publishDraftMode = "publish:draft_mode"
 	publishEvent     = "publish:publish_event"
@@ -24,23 +26,28 @@ type publishInterface interface {
 	SetPublishStatus(bool)
 }
 
+// PublishEventInterface defined publish event itself's interface
 type PublishEventInterface interface {
 	Publish(*gorm.DB) error
 	Discard(*gorm.DB) error
 }
 
+// Status publish status, need to be embedded in your models to get the publish feature
 type Status struct {
 	PublishStatus bool
 }
 
+// GetPublishStatus get publish status
 func (s Status) GetPublishStatus() bool {
 	return s.PublishStatus
 }
 
+// SetPublishStatus set publish status
 func (s *Status) SetPublishStatus(status bool) {
 	s.PublishStatus = status
 }
 
+// ConfigureQorResource configure qor resource for qor admin
 func (s Status) ConfigureQorResource(res resource.Resourcer) {
 	if res, ok := res.(*admin.Resource); ok {
 		if res.GetMeta("PublishStatus") == nil {
@@ -52,11 +59,13 @@ func (s Status) ConfigureQorResource(res resource.Resourcer) {
 	}
 }
 
+// Publish defined a publish struct
 type Publish struct {
 	DB             *gorm.DB
 	deleteCallback func(*gorm.Scope)
 }
 
+// IsDraftMode check if current db in draft mode
 func IsDraftMode(db *gorm.DB) bool {
 	if draftMode, ok := db.Get(publishDraftMode); ok {
 		if isDraft, ok := draftMode.(bool); ok && isDraft {
@@ -66,6 +75,7 @@ func IsDraftMode(db *gorm.DB) bool {
 	return false
 }
 
+// IsPublishEvent check if current model is a publish event model
 func IsPublishEvent(model interface{}) (ok bool) {
 	if model != nil {
 		_, ok = reflect.New(utils.ModelType(model)).Interface().(PublishEventInterface)
@@ -73,6 +83,7 @@ func IsPublishEvent(model interface{}) (ok bool) {
 	return
 }
 
+// IsPublishableModel check if current model is a publishable
 func IsPublishableModel(model interface{}) (ok bool) {
 	if model != nil {
 		_, ok = reflect.New(utils.ModelType(model)).Interface().(publishInterface)
@@ -82,6 +93,7 @@ func IsPublishableModel(model interface{}) (ok bool) {
 
 var injectedJoinTableHandler = map[reflect.Type]bool{}
 
+// New initialize a publish instance
 func New(db *gorm.DB) *Publish {
 	tableHandler := gorm.DefaultTableNameHandler
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
@@ -141,14 +153,17 @@ func New(db *gorm.DB) *Publish {
 	return &Publish{DB: db, deleteCallback: deleteCallback}
 }
 
+// DraftTableName get draft table name of passed in string
 func DraftTableName(table string) string {
 	return OriginalTableName(table) + "_draft"
 }
 
+// OriginalTableName get original table name of passed in string
 func OriginalTableName(table string) string {
 	return strings.TrimSuffix(table, "_draft")
 }
 
+// AutoMigrate run auto migrate in draft tables
 func (db *Publish) AutoMigrate(values ...interface{}) {
 	for _, value := range values {
 		tableName := db.DB.NewScope(value).TableName()
@@ -156,10 +171,12 @@ func (db *Publish) AutoMigrate(values ...interface{}) {
 	}
 }
 
+// ProductionDB get db in production mode
 func (db Publish) ProductionDB() *gorm.DB {
 	return db.DB.Set(publishDraftMode, false)
 }
 
+// DraftDB get db in draft mode
 func (db Publish) DraftDB() *gorm.DB {
 	return db.DB.Set(publishDraftMode, true)
 }
@@ -168,10 +185,12 @@ func (db Publish) newResolver(records ...interface{}) *resolver {
 	return &resolver{Records: records, DB: db.DB, Dependencies: map[string]*dependency{}}
 }
 
+// Publish publish records
 func (db Publish) Publish(records ...interface{}) {
 	db.newResolver(records...).Publish()
 }
 
+// Discard discard records
 func (db Publish) Discard(records ...interface{}) {
 	db.newResolver(records...).Discard()
 }
