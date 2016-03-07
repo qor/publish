@@ -145,7 +145,7 @@ func (resolver *resolver) GenerateDependencies() {
 	}
 }
 
-func (resolver *resolver) Publish() error {
+func (resolver *resolver) Publish() (err error) {
 	resolver.GenerateDependencies()
 	tx := resolver.DB.Begin()
 
@@ -245,7 +245,7 @@ func (resolver *resolver) Publish() error {
 	return err
 }
 
-func (resolver *resolver) Discard() error {
+func (resolver *resolver) Discard() (err error) {
 	resolver.GenerateDependencies()
 	tx := resolver.DB.Begin()
 
