@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/qor/qor/admin"
+	"github.com/qor/admin"
 	"github.com/qor/qor/resource"
 )
 
