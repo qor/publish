@@ -56,11 +56,11 @@
                     <td class="mdl-data-table__cell--non-numeric">
                       {{if $isPublishEvent}}
                         <div class="qor-table__content">
-                          {{$event := render_index_meta $record $meta}}
+                          {{$event := render_meta $record $meta}}
                           {{t (printf "qor_publish.events.%v" $event) $event}}
                         </div>
                       {{else}}
-                        <div class="qor-table__content">{{render_index_meta $record $meta}}</div>
+                        <div class="qor-table__content">{{render_meta $record $meta}}</div>
                       {{end}}
                     </td>
                   {{end}}
