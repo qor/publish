@@ -1,12 +1,12 @@
 ## Publish
 
-Publish allow user update a resource but do not show the change in website until it is get "published" for [GORM-backend](https://github.com/jinzhu/gorm) models
+The Publish Plugin decouples the timing of data updates in the QOR Admin interface from the display of data on the frontend of the website which QOR Admin is backing. A [GORM-backend](https://github.com/jinzhu/gorm) model can be withheld from frontend display until it is "published".
 
 [![GoDoc](https://godoc.org/github.com/qor/publish?status.svg)](https://godoc.org/github.com/qor/publish)
 
 ## Usage
 
-Embed `publish.Status` as anonymous field in your model to get the publish feature
+Embed `publish.Status` as an anonymous field in your model to apply the Publish feature.
 
 ```go
 type Product struct {
@@ -29,7 +29,7 @@ draftDB := publish.DraftDB() // Draft resources are saved here
 productionDB := publish.ProductionDB() // Published resources saved here
 ```
 
-With the draft db, all changes you made will be saved in `products_draft`, with the `productionDB`, all you changes will be in `products` table, and sync back to `products_draft`
+With the draft db, all your changes will be saved in `products_draft`, with the `productionDB`, all your changes will be in `products` table and sync back to `products_draft`.
 
 ```go
 // Publish changes you made in `products_draft` to `products`
@@ -41,7 +41,10 @@ publish.Discard(&product)
 
 ## Publish Event
 
-In some cases, you might want to update many records, but don't want to show all of them as draft, for example, when sorting products, I have changed 100 products's position, but don't want to show 100 products as draft, but only want to show one event `Changed product's sorting` in the draft page, after publish this event, then publish all position changes to production, `PublishEvent` is built for that
+To avoid a large amount (*n*) of draft events when applying the Publish feature to a set of (*n*) records, it is possible to batch the events into a single, high-level event which represents the set of (*n*) events. To do this, use the `PublishEvent` feature.
+
+For example, when sorting products, say you have changed 100 products' positions but don't want to show 100 products as draft nor have to go through the horrible process of publishing 100 products, one at a time. Instead, you can show a single, high-level event such as `Changed products' sorting` in the draft page. After publishing this single event, all of the associated position changes will be published.
+
 
 ```go
 // Register Publish Event
@@ -77,13 +80,13 @@ func init() {
 
 ## Qor Support
 
-[QOR](http://getqor.com) is architected from the ground up to accelerate development and deployment of Content Management Systems, E-commerce Systems, and Business Applications, and comprised of modules that abstract common features for such system.
+[QOR](http://getqor.com) is architected from the ground up to accelerate development and deployment of Content Management Systems, E-commerce Systems, and Business Applications and as such is comprised of modules that abstract common features for such systems.
 
-Although Publish could be used alone, it works nicely with QOR, if you have requirements to manage your application's data, be sure to check QOR out!
+Although Publish could be used alone, it works very nicely with QOR, if you have requirements to manage your application's data, be sure to check QOR out!
 
 [Publish Demo: http://demo.getqor.com/admin/publish](http://demo.getqor.com/admin/publish)
 
-If you want to all changes you made in draft table by default, initialize QOR admin with publish's draft DB, if you want to manage those drafts data, add it as resource
+If you want all changes made to be stored in the draft table by default, initialize QOR Admin with the Publish value's draft DB. If you then want to manage those drafts' data, add the Publish value as resource to QOR Admin:
 
 ```go
 Admin := admin.New(&qor.Config{DB: Publish.DraftDB()})
