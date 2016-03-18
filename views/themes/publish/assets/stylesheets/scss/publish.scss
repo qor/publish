@@ -16,5 +16,11 @@
 
 .is-deleted,
 .is-changed {
-  background-color: #FCE4EC;
+  background-color: #eee;
+  .qor-table__content{
+    text-decoration: line-through;
+  }
+  a.qor-action__view{
+    color: #FF1462;
+  }
 }

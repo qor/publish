@@ -67,7 +67,13 @@
 
                   {{if not $isPublishEvent}}
                     <td class="mdl-data-table__cell--non-numeric qor-table__actions">
-                      <a class="qor-action__view qor-js-view" data-url="{{url_for $resource}}/diff/{{$key}}" href="javascript:void(0);">{{t "qor_admin.publish.view_changes" "View Changes"}}</a>
+                      <a class="qor-action__view qor-js-view" data-url="{{url_for $resource}}/diff/{{$key}}" href="javascript:void(0);">
+                        {{if $record.DeletedAt}}
+                          {{t "qor_admin.publish.marked_for_deletion" "Marked for Deletion"}}
+                        {{else}}
+                          {{t "qor_admin.publish.view_changes" "View Changes"}}
+                        {{end}}
+                      </a>
                     </td>
                   {{end}}
                 </tr>
