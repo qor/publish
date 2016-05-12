@@ -102,7 +102,7 @@ func (db *publishController) PublishOrDiscard(context *admin.Context) {
 // ConfigureQorResource configure qor resource for qor admin
 func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
 	if res, ok := res.(*admin.Resource); ok {
-		admin.RegisterViewPath("github.com/qor/publish/views")
+		res.GetAdmin().RegisterViewPath("github.com/qor/publish/views")
 		res.UseTheme("publish")
 
 		if event := res.GetAdmin().GetResource("PublishEvent"); event == nil {
