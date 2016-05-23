@@ -2,7 +2,10 @@ package publish
 
 import "github.com/qor/worker"
 
-func (publish *Publish) SetWorker(w *worker.Worker) error {
+type QorWorkerArgument struct {
+	IDs []string
+}
+
+func (publish *Publish) SetWorker(w *worker.Worker) {
 	publish.WorkerScheduler = w
-	return nil
 }

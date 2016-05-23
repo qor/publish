@@ -8,6 +8,7 @@ import (
 
 	"github.com/qor/admin"
 	"github.com/qor/qor/resource"
+	"github.com/qor/worker"
 )
 
 type publishController struct {
@@ -108,6 +109,17 @@ func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
 		if event := res.GetAdmin().GetResource("PublishEvent"); event == nil {
 			eventResource := res.GetAdmin().AddResource(&PublishEvent{}, &admin.Config{Invisible: true})
 			eventResource.IndexAttrs("Name", "Description", "CreatedAt")
+		}
+
+		if w := publish.WorkerScheduler; w != nil {
+			w.RegisterJob(&worker.Job{
+				Name:  "Publish",
+				Group: "Publish",
+				Handler: func(argument interface{}, job worker.QorJobInterface) error {
+					return nil
+				},
+				Resource: res.GetAdmin().NewResource(&QorWorkerArgument{}),
+			})
 		}
 
 		controller := publishController{publish}
