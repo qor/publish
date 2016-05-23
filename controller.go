@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/jinzhu/now"
 	"github.com/qor/admin"
 	"github.com/qor/qor/resource"
 	"github.com/qor/worker"
@@ -70,33 +71,50 @@ func (db *publishController) Diff(context *admin.Context) {
 func (db *publishController) PublishOrDiscard(context *admin.Context) {
 	var request = context.Request
 	var ids = request.Form["checked_ids[]"]
-	var records = []interface{}{}
-	var values = map[string][]string{}
 
-	for _, id := range ids {
-		if keys := strings.Split(id, "__"); len(keys) == 2 {
-			name, id := keys[0], keys[1]
-			values[name] = append(values[name], id)
+	if scheduler := db.Publish.WorkerScheduler; scheduler != nil {
+		jobResource := scheduler.JobResource
+		result := jobResource.NewStruct().(worker.QorJobInterface)
+		result.SetJob(scheduler.GetRegisteredJob("Publish"))
+
+		workerArgument := &QorWorkerArgument{IDs: ids}
+		if t, err := now.Parse(request.Form.Get("scheduled_time")); err == nil {
+			workerArgument.ScheduleTime = &t
 		}
-	}
+		result.SetSerializableArgumentValue(workerArgument)
 
-	draftDB := context.GetDB().Set(publishDraftMode, true).Unscoped()
-	for name, value := range values {
-		res := context.Admin.GetResource(name)
-		results := res.NewSlice()
-		if draftDB.Find(results, fmt.Sprintf("%v IN (?)", res.PrimaryDBName()), value).Error == nil {
-			resultValues := reflect.Indirect(reflect.ValueOf(results))
-			for i := 0; i < resultValues.Len(); i++ {
-				records = append(records, resultValues.Index(i).Interface())
+		jobResource.CallSave(result, context.Context)
+		scheduler.AddJob(result)
+	} else {
+		var records = []interface{}{}
+		var values = map[string][]string{}
+
+		for _, id := range ids {
+			if keys := strings.Split(id, "__"); len(keys) == 2 {
+				name, id := keys[0], keys[1]
+				values[name] = append(values[name], id)
 			}
 		}
+
+		draftDB := context.GetDB().Set(publishDraftMode, true).Unscoped()
+		for name, value := range values {
+			res := context.Admin.GetResource(name)
+			results := res.NewSlice()
+			if draftDB.Find(results, fmt.Sprintf("%v IN (?)", res.PrimaryDBName()), value).Error == nil {
+				resultValues := reflect.Indirect(reflect.ValueOf(results))
+				for i := 0; i < resultValues.Len(); i++ {
+					records = append(records, resultValues.Index(i).Interface())
+				}
+			}
+		}
+
+		if request.Form.Get("publish_type") == "publish" {
+			Publish{DB: draftDB}.Publish(records...)
+		} else if request.Form.Get("publish_type") == "discard" {
+			Publish{DB: draftDB}.Discard(records...)
+		}
 	}
 
-	if request.Form.Get("publish_type") == "publish" {
-		Publish{DB: draftDB}.Publish(records...)
-	} else if request.Form.Get("publish_type") == "discard" {
-		Publish{DB: draftDB}.Discard(records...)
-	}
 	http.Redirect(context.Writer, context.Request, context.Request.RequestURI, http.StatusFound)
 }
 
