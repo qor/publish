@@ -7,6 +7,7 @@ import (
 	"github.com/qor/admin"
 	"github.com/qor/qor/resource"
 	"github.com/qor/qor/utils"
+	"github.com/qor/worker"
 
 	"reflect"
 )
@@ -61,8 +62,9 @@ func (s Status) ConfigureQorResource(res resource.Resourcer) {
 
 // Publish defined a publish struct
 type Publish struct {
-	DB             *gorm.DB
-	deleteCallback func(*gorm.Scope)
+	WorkerScheduler *worker.Worker
+	DB              *gorm.DB
+	deleteCallback  func(*gorm.Scope)
 }
 
 // IsDraftMode check if current db in draft mode
