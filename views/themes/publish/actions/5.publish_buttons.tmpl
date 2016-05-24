@@ -1,5 +1,16 @@
 <div class="qor-actions float-right">
   <button type="submit" class="mdl-button mdl-button--accent mdl-js-button mdl-js-ripple-effect qor-action--button" data-confirm="{{t "Are you sure?"}}" name="publish_type" value="discard">{{t "qor_publish.form.discard" "Discard"}}</button>
-  <button type="submit" class="mdl-button mdl-button--accent mdl-js-button mdl-js-ripple-effect qor-action--button" name="publish_type" value="publish">{{t "qor_publish.form.schedule_time_to_publish" "Schedule Time To Publish"}}</button>
-  <button type="submit" class="mdl-button mdl-button--colored mdl-button--raised mdl-js-ripple-effect qor-action--button" data-confirm="{{t "Are you sure?"}}" name="publish_type" value="publish">{{t "qor_publish.form.publish" "Publish"}}</button>
+
+  <button
+        type="button"
+        class="mdl-button mdl-button--accent qor-action--button qor-action--button qor-publish__button-popover"
+        data-modal-title="{{t "qor_publish.form.schedule_time_to_publish" "Schedule Time To Publish"}}"
+        data-modal-hint="{{t "qor_publish.form.schedule_time_to_publish.hint" "Select the date and time you want to publish"}}"
+        data-modal-set="{{t "qor_publish.form.schedule_time_to_publish.set_schedule" "SET SCHEDULE"}}"
+        data-modal-cancel="{{t "qor_admin.form.cancel" "Cancel"}}">
+        {{t "qor_publish.form.schedule_time_to_publish" "Schedule Time To Publish"}}
+    </button>
+
+  <input class="publish-schedule-time" type="text" name="scheduled_time" style="display: none;" />
+  <button type="submit" class="mdl-button mdl-button--colored mdl-button--raised mdl-js-ripple-effect qor-action--button qor-publish__submit" data-confirm="{{t "Are you sure?"}}" name="publish_type" value="publish">{{t "qor_publish.form.publish" "Publish"}}</button>
 </div>
