@@ -157,7 +157,7 @@ func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
 							}
 						}
 
-						Publish{DB: draftDB}.Publish(records...)
+						publish.Logger(&workerJobLogger{job: job}).Publish(records...)
 					}
 					return nil
 				},

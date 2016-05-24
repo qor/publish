@@ -64,6 +64,7 @@ func (s Status) ConfigureQorResource(res resource.Resourcer) {
 type Publish struct {
 	WorkerScheduler *worker.Worker
 	DB              *gorm.DB
+	logger          logger
 	deleteCallback  func(*gorm.Scope)
 }
 
@@ -152,7 +153,7 @@ func New(db *gorm.DB) *Publish {
 
 	db.Callback().RowQuery().Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
 	db.Callback().Query().Before("gorm:query").Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
-	return &Publish{DB: db, deleteCallback: deleteCallback}
+	return &Publish{DB: db, deleteCallback: deleteCallback, logger: Logger}
 }
 
 // DraftTableName get draft table name of passed in string
@@ -181,6 +182,16 @@ func (db Publish) ProductionDB() *gorm.DB {
 // DraftDB get db in draft mode
 func (db Publish) DraftDB() *gorm.DB {
 	return db.DB.Set(publishDraftMode, true)
+}
+
+// DraftDB get db in draft mode
+func (db Publish) Logger(l logger) *Publish {
+	return &Publish{
+		WorkerScheduler: db.WorkerScheduler,
+		DB:              db.DB,
+		logger:          l,
+		deleteCallback:  db.deleteCallback,
+	}
 }
 
 func (db Publish) newResolver(records ...interface{}) *resolver {
