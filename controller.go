@@ -8,6 +8,7 @@ import (
 
 	"github.com/jinzhu/now"
 	"github.com/qor/admin"
+	"github.com/qor/qor"
 	"github.com/qor/qor/resource"
 	"github.com/qor/worker"
 )
@@ -133,7 +134,21 @@ func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
 
 		if w := publish.WorkerScheduler; w != nil {
 			qorWorkerArgumentResource := res.GetAdmin().NewResource(&QorWorkerArgument{})
-			qorWorkerArgumentResource.Meta(&admin.Meta{Name: "IDs", Type: "hidden"})
+			qorWorkerArgumentResource.Meta(&admin.Meta{Name: "IDs", Type: "publish_job_argument", Valuer: func(record interface{}, context *qor.Context) interface{} {
+				var values = map[*admin.Resource][]string{}
+
+				if workerArgument, ok := record.(*QorWorkerArgument); ok {
+					for _, id := range workerArgument.IDs {
+						if keys := strings.Split(id, "__"); len(keys) == 2 {
+							name, id := keys[0], keys[1]
+							recordRes := res.GetAdmin().GetResource(name)
+							values[recordRes] = append(values[recordRes], id)
+						}
+					}
+				}
+
+				return values
+			}})
 
 			w.RegisterJob(&worker.Job{
 				Name:  "Publish",
