@@ -132,6 +132,9 @@ func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
 		}
 
 		if w := publish.WorkerScheduler; w != nil {
+			qorWorkerArgumentResource := res.GetAdmin().NewResource(&QorWorkerArgument{})
+			qorWorkerArgumentResource.Meta(&admin.Meta{Name: "IDs", Type: "hidden"})
+
 			w.RegisterJob(&worker.Job{
 				Name:  "Publish",
 				Group: "Publish",
@@ -163,7 +166,7 @@ func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
 					}
 					return nil
 				},
-				Resource: res.GetAdmin().NewResource(&QorWorkerArgument{}),
+				Resource: qorWorkerArgumentResource,
 			})
 		}
 
