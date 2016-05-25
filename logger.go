@@ -5,11 +5,11 @@ import (
 	"os"
 )
 
-type logger interface {
+type LoggerInterface interface {
 	Print(...interface{})
 }
 
-var Logger logger
+var Logger LoggerInterface
 
 func init() {
 	Logger = log.New(os.Stdout, "\r\n", 0)

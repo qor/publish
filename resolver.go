@@ -15,6 +15,7 @@ type resolver struct {
 	Events       []PublishEventInterface
 	Dependencies map[string]*dependency
 	DB           *gorm.DB
+	publish      Publish
 }
 
 type dependency struct {
@@ -151,6 +152,7 @@ func (resolver *resolver) Publish() (err error) {
 
 	// Publish Events
 	for _, event := range resolver.Events {
+		resolver.publish.logger.Print("Publishing Event: ", utils.Stringify(event))
 		event.Publish(tx)
 	}
 
@@ -177,22 +179,25 @@ func (resolver *resolver) Publish() (err error) {
 		}
 
 		if len(dep.PrimaryValues) > 0 {
+			queryValues := toQueryValues(dep.PrimaryValues)
+			resolver.publish.logger.Print(fmt.Sprintf("Publishing %v: ", productionScope.GetModelStruct().ModelType.Name()), queryValues)
+
 			// set status to published
 			updateStateSQL := fmt.Sprintf("UPDATE %v SET publish_status = ? WHERE %v IN (%v)", draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))
 
 			var params = []interface{}{bool(PUBLISHED)}
-			params = append(params, toQueryValues(dep.PrimaryValues)...)
+			params = append(params, queryValues...)
 			tx.Exec(updateStateSQL, params...)
 
 			// delete old records
 			deleteSQL := fmt.Sprintf("DELETE FROM %v WHERE %v IN (%v)", productionTable, productionPrimaryKey, toQueryMarks(dep.PrimaryValues))
-			tx.Exec(deleteSQL, toQueryValues(dep.PrimaryValues)...)
+			tx.Exec(deleteSQL, queryValues...)
 
 			// insert new records
 			publishSQL := fmt.Sprintf("INSERT INTO %v (%v) SELECT %v FROM %v WHERE %v IN (%v)",
 				productionTable, strings.Join(productionColumns, " ,"), strings.Join(draftColumns, " ,"),
 				draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))
-			tx.Exec(publishSQL, toQueryValues(dep.PrimaryValues)...)
+			tx.Exec(publishSQL, queryValues...)
 
 			// publish join table data
 			for _, relationship := range dep.ManyToManyRelations {
@@ -251,6 +256,7 @@ func (resolver *resolver) Discard() (err error) {
 
 	// Discard Events
 	for _, event := range resolver.Events {
+		resolver.publish.logger.Print("Discarding Event: ", utils.Stringify(event))
 		event.Discard(tx)
 	}
 
@@ -278,6 +284,8 @@ func (resolver *resolver) Discard() (err error) {
 		}
 
 		if len(dep.PrimaryValues) > 0 {
+			resolver.publish.logger.Print(fmt.Sprintf("Discarding %v: ", productionScope.GetModelStruct().ModelType.Name()), toQueryValues(dep.PrimaryValues))
+
 			// delete data from draft db
 			deleteSQL := fmt.Sprintf("DELETE FROM %v WHERE %v IN (%v)", draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))
 			tx.Exec(deleteSQL, toQueryValues(dep.PrimaryValues)...)
@@ -396,7 +404,7 @@ func toQueryValues(primaryValues [][][]interface{}, columns ...string) (values [
 				values = append(values, value[1])
 			} else {
 				for _, column := range columns {
-					if fmt.Sprintf("%v", value[0]) == fmt.Sprintf("%v", column) {
+					if column == fmt.Sprint(value[0]) {
 						values = append(values, value[1])
 					}
 				}

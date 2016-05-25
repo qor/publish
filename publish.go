@@ -64,7 +64,7 @@ func (s Status) ConfigureQorResource(res resource.Resourcer) {
 type Publish struct {
 	WorkerScheduler *worker.Worker
 	DB              *gorm.DB
-	logger          logger
+	logger          LoggerInterface
 	deleteCallback  func(*gorm.Scope)
 }
 
@@ -185,7 +185,7 @@ func (db Publish) DraftDB() *gorm.DB {
 }
 
 // DraftDB get db in draft mode
-func (db Publish) Logger(l logger) *Publish {
+func (db Publish) Logger(l LoggerInterface) *Publish {
 	return &Publish{
 		WorkerScheduler: db.WorkerScheduler,
 		DB:              db.DB,
@@ -195,7 +195,7 @@ func (db Publish) Logger(l logger) *Publish {
 }
 
 func (db Publish) newResolver(records ...interface{}) *resolver {
-	return &resolver{Records: records, DB: db.DB, Dependencies: map[string]*dependency{}}
+	return &resolver{publish: db, Records: records, DB: db.DB, Dependencies: map[string]*dependency{}}
 }
 
 // Publish publish records
