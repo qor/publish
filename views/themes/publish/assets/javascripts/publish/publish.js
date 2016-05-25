@@ -54,9 +54,18 @@
     click: function (e) {
       var options = this.options;
       var $target = $(e.target);
+      var isChecked = $('.qor-js-table').find('input:checkbox').not(options.toggleCheck).is(':checked');
       var data;
       var $scheduleInput;
       var scheduleTime;
+
+
+      if ($target.is(options.submit)) {
+        if (!isChecked) {
+          window.alert($target.data().noItem);
+          return false;
+        }
+      }
 
 
       if ($target.is(options.scheduleSetButton)) {
@@ -64,7 +73,11 @@
         scheduleTime = $(options.scheduleTime).val();
         if (scheduleTime){
           $('.publish-schedule-time').val(scheduleTime);
-          $(options.submit).closest('form').submit();
+          if (isChecked) {
+            $(options.submit).closest('form').submit();
+          } else {
+            this.$scheduleModal.qorModal('hide');
+          }
         }
       }
 

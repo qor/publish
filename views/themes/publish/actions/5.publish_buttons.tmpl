@@ -1,6 +1,25 @@
-<div class="qor-actions float-right">
-  <button type="submit" class="mdl-button mdl-button--accent mdl-js-button mdl-js-ripple-effect qor-action--button" data-confirm="{{t "Are you sure?"}}" name="publish_type" value="discard">{{t "qor_publish.form.discard" "Discard"}}</button>
+<div class="qor-actions qor-actions--publish">
 
+  <!-- discard button -->
+  <button
+        type="submit"
+        class="mdl-button qor-action--button qor-publish__discard"
+        data-confirm="{{t "Are you sure?"}}"
+        name="publish_type" value="discard">
+        {{t "qor_publish.form.discard" "Discard"}}
+  </button>
+
+  <!-- publish button -->
+  <button
+        type="submit"
+        class="mdl-button mdl-button--colored mdl-button--raised qor-action--button qor-publish__submit"
+        data-confirm="{{t "Are you sure?"}}"
+        data-no-item="{{t "qor_admin.actions.please_select_an_item" "Please select an item"}}"
+        name="publish_type" value="publish">
+        {{t "qor_publish.form.publish" "Publish"}}
+  </button>
+
+  <!-- schedule time publish button -->
   <button
         type="button"
         class="mdl-button mdl-button--accent qor-action--button qor-action--button qor-publish__button-popover"
@@ -11,6 +30,5 @@
         {{t "qor_publish.form.schedule_time_to_publish" "Schedule Time To Publish"}}
     </button>
 
-  <button type="submit" class="mdl-button mdl-button--colored mdl-button--raised mdl-js-ripple-effect qor-action--button qor-publish__submit" data-confirm="{{t "Are you sure?"}}" name="publish_type" value="publish">{{t "qor_publish.form.publish" "Publish"}}</button>
   <input class="publish-schedule-time" type="text" name="scheduled_time" style="display: none;" />
 </div>

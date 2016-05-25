@@ -24,3 +24,19 @@
     color: #FF1462;
   }
 }
+
+.qor-actions--publish{
+  float: none;
+  .qor-action--button{
+    float: right;
+  }
+  .qor-publish__button-popover{
+    background-color: rgba(0,0,0,.12);
+    color: rgba(0,0,0,.54);
+    margin-right: 32px;
+  }
+  .qor-publish__discard{
+    float: left;
+    color: #ff4081;
+  }
+}
