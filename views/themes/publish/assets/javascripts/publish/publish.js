@@ -79,7 +79,10 @@
         this.$scheduleModal.qorModal('show');
         $scheduleInput = $(options.scheduleTime);
 
-        $scheduleInput.materialDatePicker({ format : 'YYYY-MM-DD HH:mm' });
+        $scheduleInput.materialDatePicker({
+          format : 'YYYY-MM-DD HH:mm',
+          minDate : new Date()
+        });
 
       }
 
