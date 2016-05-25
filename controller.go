@@ -8,7 +8,6 @@ import (
 
 	"github.com/jinzhu/now"
 	"github.com/qor/admin"
-	"github.com/qor/qor"
 	"github.com/qor/qor/resource"
 	"github.com/qor/worker"
 )
@@ -130,59 +129,6 @@ func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
 		if event := res.GetAdmin().GetResource("PublishEvent"); event == nil {
 			eventResource := res.GetAdmin().AddResource(&PublishEvent{}, &admin.Config{Invisible: true})
 			eventResource.IndexAttrs("Name", "Description", "CreatedAt")
-		}
-
-		if w := publish.WorkerScheduler; w != nil {
-			qorWorkerArgumentResource := res.GetAdmin().NewResource(&QorWorkerArgument{})
-			qorWorkerArgumentResource.Meta(&admin.Meta{Name: "IDs", Type: "publish_job_argument", Valuer: func(record interface{}, context *qor.Context) interface{} {
-				var values = map[*admin.Resource][]string{}
-
-				if workerArgument, ok := record.(*QorWorkerArgument); ok {
-					for _, id := range workerArgument.IDs {
-						if keys := strings.Split(id, "__"); len(keys) == 2 {
-							name, id := keys[0], keys[1]
-							recordRes := res.GetAdmin().GetResource(name)
-							values[recordRes] = append(values[recordRes], id)
-						}
-					}
-				}
-
-				return values
-			}})
-
-			w.RegisterJob(&worker.Job{
-				Name:  "Publish",
-				Group: "Publish",
-				Handler: func(argument interface{}, job worker.QorJobInterface) error {
-					if argu, ok := argument.(*QorWorkerArgument); ok {
-						var records = []interface{}{}
-						var values = map[string][]string{}
-
-						for _, id := range argu.IDs {
-							if keys := strings.Split(id, "__"); len(keys) == 2 {
-								name, id := keys[0], keys[1]
-								values[name] = append(values[name], id)
-							}
-						}
-
-						draftDB := publish.DraftDB().Unscoped()
-						for name, value := range values {
-							recordRes := res.GetAdmin().GetResource(name)
-							results := recordRes.NewSlice()
-							if draftDB.Find(results, fmt.Sprintf("%v IN (?)", recordRes.PrimaryDBName()), value).Error == nil {
-								resultValues := reflect.Indirect(reflect.ValueOf(results))
-								for i := 0; i < resultValues.Len(); i++ {
-									records = append(records, resultValues.Index(i).Interface())
-								}
-							}
-						}
-
-						publish.Logger(&workerJobLogger{job: job}).Publish(records...)
-					}
-					return nil
-				},
-				Resource: qorWorkerArgumentResource,
-			})
 		}
 
 		controller := publishController{publish}
