@@ -180,7 +180,7 @@ func (resolver *resolver) Publish() (err error) {
 
 		if len(dep.PrimaryValues) > 0 {
 			queryValues := toQueryValues(dep.PrimaryValues)
-			resolver.publish.logger.Print(fmt.Sprintf("Publishing %v: ", productionScope.GetModelStruct().ModelType.Name()), queryValues)
+			resolver.publish.logger.Print(fmt.Sprintf("Publishing %v: ", productionScope.GetModelStruct().ModelType.Name()), stringifyPrimaryValues(dep.PrimaryValues))
 
 			// set status to published
 			updateStateSQL := fmt.Sprintf("UPDATE %v SET publish_status = ? WHERE %v IN (%v)", draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))
@@ -284,7 +284,7 @@ func (resolver *resolver) Discard() (err error) {
 		}
 
 		if len(dep.PrimaryValues) > 0 {
-			resolver.publish.logger.Print(fmt.Sprintf("Discarding %v: ", productionScope.GetModelStruct().ModelType.Name()), toQueryValues(dep.PrimaryValues))
+			resolver.publish.logger.Print(fmt.Sprintf("Discarding %v: ", productionScope.GetModelStruct().ModelType.Name()), stringifyPrimaryValues(dep.PrimaryValues))
 
 			// delete data from draft db
 			deleteSQL := fmt.Sprintf("DELETE FROM %v WHERE %v IN (%v)", draftTable, draftPrimaryKey, toQueryMarks(dep.PrimaryValues))
