@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strings"
+
+	"github.com/jinzhu/gorm"
 )
 
 type LoggerInterface interface {
@@ -15,6 +18,30 @@ var Logger LoggerInterface
 
 func init() {
 	Logger = log.New(os.Stdout, "\r\n", 0)
+}
+
+func stringify(object interface{}) string {
+	if obj, ok := object.(interface {
+		Stringify() string
+	}); ok {
+		return obj.Stringify()
+	}
+
+	scope := gorm.Scope{Value: object}
+	for _, column := range []string{"Description", "Name", "Title", "Code"} {
+		if field, ok := scope.FieldByName(column); ok {
+			return fmt.Sprintf("%v", field.Field.Interface())
+		}
+	}
+
+	if scope.PrimaryField() != nil {
+		if scope.PrimaryKeyZero() {
+			return ""
+		}
+		return fmt.Sprintf("%v#%v", scope.GetModelStruct().ModelType.Name(), scope.PrimaryKeyValue())
+	}
+
+	return fmt.Sprint(reflect.Indirect(reflect.ValueOf(object)).Interface())
 }
 
 func stringifyPrimaryValues(primaryValues [][][]interface{}, columns ...string) string {

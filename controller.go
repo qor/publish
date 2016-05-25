@@ -85,6 +85,8 @@ func (db *publishController) PublishOrDiscard(context *admin.Context) {
 
 		jobResource.CallSave(result, context.Context)
 		scheduler.AddJob(result)
+
+		http.Redirect(context.Writer, context.Request, context.URLFor(jobResource), http.StatusFound)
 	} else {
 		var records = []interface{}{}
 		var values = map[string][]string{}
@@ -113,9 +115,9 @@ func (db *publishController) PublishOrDiscard(context *admin.Context) {
 		} else if request.Form.Get("publish_type") == "discard" {
 			Publish{DB: draftDB}.Discard(records...)
 		}
-	}
 
-	http.Redirect(context.Writer, context.Request, context.Request.RequestURI, http.StatusFound)
+		http.Redirect(context.Writer, context.Request, context.Request.RequestURI, http.StatusFound)
+	}
 }
 
 // ConfigureQorResource configure qor resource for qor admin

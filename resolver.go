@@ -152,7 +152,7 @@ func (resolver *resolver) Publish() (err error) {
 
 	// Publish Events
 	for _, event := range resolver.Events {
-		resolver.publish.logger.Print("Publishing Event: ", utils.Stringify(event))
+		resolver.publish.logger.Print("Publishing Event: ", stringify(event))
 		event.Publish(tx)
 	}
 
@@ -256,7 +256,7 @@ func (resolver *resolver) Discard() (err error) {
 
 	// Discard Events
 	for _, event := range resolver.Events {
-		resolver.publish.logger.Print("Discarding Event: ", utils.Stringify(event))
+		resolver.publish.logger.Print("Discarding Event: ", stringify(event))
 		event.Discard(tx)
 	}
 
