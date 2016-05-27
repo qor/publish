@@ -85,5 +85,39 @@ func (publish *Publish) registerWorkerJob() {
 			},
 			Resource: qorWorkerArgumentResource,
 		})
+
+		w.RegisterJob(&worker.Job{
+			Name:  "DiscardPublish",
+			Group: "Publish",
+			Handler: func(argument interface{}, job worker.QorJobInterface) error {
+				if argu, ok := argument.(*QorWorkerArgument); ok {
+					var records = []interface{}{}
+					var values = map[string][]string{}
+
+					for _, id := range argu.IDs {
+						if keys := strings.Split(id, "__"); len(keys) == 2 {
+							name, id := keys[0], keys[1]
+							values[name] = append(values[name], id)
+						}
+					}
+
+					draftDB := publish.DraftDB().Unscoped()
+					for name, value := range values {
+						recordRes := w.Admin.GetResource(name)
+						results := recordRes.NewSlice()
+						if draftDB.Find(results, fmt.Sprintf("%v IN (?)", recordRes.PrimaryDBName()), value).Error == nil {
+							resultValues := reflect.Indirect(reflect.ValueOf(results))
+							for i := 0; i < resultValues.Len(); i++ {
+								records = append(records, resultValues.Index(i).Interface())
+							}
+						}
+					}
+
+					publish.Logger(&workerJobLogger{job: job}).Discard(records...)
+				}
+				return nil
+			},
+			Resource: qorWorkerArgumentResource,
+		})
 	}
 }

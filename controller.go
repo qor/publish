@@ -75,7 +75,11 @@ func (db *publishController) PublishOrDiscard(context *admin.Context) {
 	if scheduler := db.Publish.WorkerScheduler; scheduler != nil {
 		jobResource := scheduler.JobResource
 		result := jobResource.NewStruct().(worker.QorJobInterface)
-		result.SetJob(scheduler.GetRegisteredJob("Publish"))
+		if request.Form.Get("publish_type") == "publish" {
+			result.SetJob(scheduler.GetRegisteredJob("Publish"))
+		} else if request.Form.Get("publish_type") == "discard" {
+			result.SetJob(scheduler.GetRegisteredJob("DiscardPublish"))
+		}
 
 		workerArgument := &QorWorkerArgument{IDs: ids}
 		if t, err := now.Parse(request.Form.Get("scheduled_time")); err == nil {
