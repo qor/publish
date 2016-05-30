@@ -115,9 +115,9 @@ func (db *publishController) PublishOrDiscard(context *admin.Context) {
 		}
 
 		if request.Form.Get("publish_type") == "publish" {
-			Publish{DB: draftDB}.Publish(records...)
+			db.Publish.Publish(records...)
 		} else if request.Form.Get("publish_type") == "discard" {
-			Publish{DB: draftDB}.Discard(records...)
+			db.Publish.Discard(records...)
 		}
 
 		http.Redirect(context.Writer, context.Request, context.Request.RequestURI, http.StatusFound)
