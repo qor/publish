@@ -124,8 +124,8 @@ func (db *publishController) PublishOrDiscard(context *admin.Context) {
 	}
 }
 
-// ConfigureQorResource configure qor resource for qor admin
-func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
+// ConfigureQorResourceBeforeInitialize configure qor resource when initialize qor admin
+func (publish *Publish) ConfigureQorResourceBeforeInitialize(res resource.Resourcer) {
 	if res, ok := res.(*admin.Resource); ok {
 		res.GetAdmin().RegisterViewPath("github.com/qor/publish/views")
 		res.UseTheme("publish")
@@ -134,7 +134,12 @@ func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
 			eventResource := res.GetAdmin().AddResource(&PublishEvent{}, &admin.Config{Invisible: true})
 			eventResource.IndexAttrs("Name", "Description", "CreatedAt")
 		}
+	}
+}
 
+// ConfigureQorResource configure qor resource for qor admin
+func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
+	if res, ok := res.(*admin.Resource); ok {
 		controller := publishController{publish}
 		router := res.GetAdmin().GetRouter()
 		router.Get(fmt.Sprintf("/%v/diff/:publish_unique_key", res.ToParam()), controller.Diff)
