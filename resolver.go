@@ -26,7 +26,7 @@ type dependency struct {
 
 func includeValue(value [][]interface{}, values [][][]interface{}) bool {
 	for _, v := range values {
-		if fmt.Sprintf("%v", v) == fmt.Sprintf("%v", value) {
+		if fmt.Sprint(v) == fmt.Sprint(value) {
 			return true
 		}
 	}
@@ -72,7 +72,7 @@ func (resolver *resolver) GetDependencies(dep *dependency, primaryKeys [][][]int
 				var selectPrimaryKeys []string
 
 				for _, field := range toScope.PrimaryFields() {
-					selectPrimaryKeys = append(selectPrimaryKeys, fmt.Sprintf("%v", toScope.Quote(field.DBName)))
+					selectPrimaryKeys = append(selectPrimaryKeys, toScope.Quote(field.DBName))
 				}
 
 				if relationship.Kind == "has_one" || relationship.Kind == "has_many" {
@@ -101,7 +101,7 @@ func (resolver *resolver) GetDependencies(dep *dependency, primaryKeys [][][]int
 
 						var currentDependencyKeys [][]interface{}
 						for idx, value := range primaryValues {
-							currentDependencyKeys = append(currentDependencyKeys, []interface{}{columns[idx], value})
+							currentDependencyKeys = append(currentDependencyKeys, []interface{}{columns[idx], reflect.Indirect(reflect.ValueOf(value)).Interface()})
 						}
 
 						dependencyKeys = append(dependencyKeys, currentDependencyKeys)
