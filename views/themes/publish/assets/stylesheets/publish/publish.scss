@@ -40,3 +40,17 @@
     color: #ff4081;
   }
 }
+
+.qor-publish__datetimepicker{
+  position: relative;
+  .mdl-textfield{
+    width: 100%;
+  }
+  .qor-action__datepicker,.qor-action__timepicker{
+    position: absolute;
+    bottom: 20px;
+  }
+  .qor-publish__time{
+    color: rgba(0, 0, 0, .75);
+  }
+}
