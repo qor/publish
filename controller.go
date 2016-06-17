@@ -8,8 +8,14 @@ import (
 
 	"github.com/jinzhu/now"
 	"github.com/qor/admin"
+	"github.com/qor/qor"
 	"github.com/qor/qor/resource"
+	"github.com/qor/roles"
 	"github.com/qor/worker"
+)
+
+const (
+	PublishPermission roles.PermissionMode = "publish"
 )
 
 type publishController struct {
@@ -17,7 +23,7 @@ type publishController struct {
 }
 
 type visiblePublishResourceInterface interface {
-	VisiblePublishResource() bool
+	VisiblePublishResource(*qor.Context) bool
 }
 
 func (db *publishController) Preview(context *admin.Context) {
@@ -31,20 +37,22 @@ func (db *publishController) Preview(context *admin.Context) {
 	draftDB := context.GetDB().Set(publishDraftMode, true).Unscoped()
 	for _, res := range context.Admin.GetResources() {
 		if visibleInterface, ok := res.Value.(visiblePublishResourceInterface); ok {
-			if !visibleInterface.VisiblePublishResource() {
+			if !visibleInterface.VisiblePublishResource(context.Context) {
 				continue
 			}
 		} else if res.Config.Invisible {
 			continue
 		}
 
-		results := res.NewSlice()
-		if IsPublishableModel(res.Value) || IsPublishEvent(res.Value) {
-			if draftDB.Unscoped().Where("publish_status = ?", DIRTY).Find(results).RowsAffected > 0 {
-				drafts = append(drafts, resource{
-					Resource: res,
-					Value:    results,
-				})
+		if res.HasPermission(PublishPermission, context.Context) {
+			results := res.NewSlice()
+			if IsPublishableModel(res.Value) || IsPublishEvent(res.Value) {
+				if draftDB.Unscoped().Where("publish_status = ?", DIRTY).Find(results).RowsAffected > 0 {
+					drafts = append(drafts, resource{
+						Resource: res,
+						Value:    results,
+					})
+				}
 			}
 		}
 	}
