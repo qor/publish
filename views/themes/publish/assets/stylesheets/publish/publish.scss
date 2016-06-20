@@ -31,12 +31,25 @@
     float: right;
   }
   .qor-publish__button-popover{
-    background-color: rgba(0,0,0,.12);
-    color: rgba(0,0,0,.54);
+    color: #03a9f4;
     margin-right: 32px;
   }
   .qor-publish__discard{
     float: left;
     color: #ff4081;
+  }
+}
+
+.qor-publish__datetimepicker{
+  position: relative;
+  .mdl-textfield{
+    width: 100%;
+  }
+  .qor-action__datepicker,.qor-action__timepicker{
+    position: absolute;
+    bottom: 20px;
+  }
+  .qor-publish__time{
+    color: rgba(0, 0, 0, .75);
   }
 }
