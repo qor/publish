@@ -34,7 +34,7 @@ func (db *publishController) Preview(context *admin.Context) {
 
 	var drafts = []resource{}
 
-	draftDB := context.GetDB().Set(publishDraftMode, true).Unscoped()
+	draftDB := db.DB.Set(publishDraftMode, true).Unscoped()
 	for _, res := range context.Admin.GetResources() {
 		if visibleInterface, ok := res.Value.(visiblePublishResourceInterface); ok {
 			if !visibleInterface.VisiblePublishResource(context.Context) {
@@ -60,16 +60,29 @@ func (db *publishController) Preview(context *admin.Context) {
 }
 
 func (db *publishController) Diff(context *admin.Context) {
-	resourceID := context.Request.URL.Query().Get(":publish_unique_key")
-	params := strings.Split(resourceID, "__")
-	name, id := params[0], params[1]
-	res := context.Admin.GetResource(name)
+	var (
+		publishKeys   []string
+		primaryValues []interface{}
+		resourceID    = context.Request.URL.Query().Get(":publish_unique_key")
+		params        = strings.Split(resourceID, "__")
+		name          = params[0]
+		res           = context.Admin.GetResource(name)
+	)
+
+	for _, value := range params[1:] {
+		primaryValues = append(primaryValues, value)
+	}
 
 	draft := res.NewStruct()
-	context.GetDB().Set(publishDraftMode, true).Unscoped().First(draft, id)
+	var scope = db.DB.NewScope(draft)
+	for _, primaryField := range scope.PrimaryFields() {
+		publishKeys = append(publishKeys, fmt.Sprintf("%v = ?", scope.Quote(primaryField.DBName)))
+	}
+
+	db.DB.Set(publishDraftMode, true).Unscoped().Where(strings.Join(publishKeys, " AND "), primaryValues...).First(draft)
 
 	production := res.NewStruct()
-	context.GetDB().Set(publishDraftMode, false).Unscoped().First(production, id)
+	db.DB.Set(publishDraftMode, false).Unscoped().Where(strings.Join(publishKeys, " AND "), primaryValues...).First(production)
 
 	results := map[string]interface{}{"Production": production, "Draft": draft, "Resource": res}
 
@@ -110,7 +123,7 @@ func (db *publishController) PublishOrDiscard(context *admin.Context) {
 			}
 		}
 
-		draftDB := context.GetDB().Set(publishDraftMode, true).Unscoped()
+		draftDB := db.DB.Set(publishDraftMode, true).Unscoped()
 		for name, value := range values {
 			res := context.Admin.GetResource(name)
 			results := res.NewSlice()
@@ -155,7 +168,12 @@ func (publish *Publish) ConfigureQorResource(res resource.Resourcer) {
 		router.Post(res.ToParam(), controller.PublishOrDiscard)
 
 		res.GetAdmin().RegisterFuncMap("publish_unique_key", func(res *admin.Resource, record interface{}, context *admin.Context) string {
-			return fmt.Sprintf("%s__%v", res.ToParam(), context.GetDB().NewScope(record).PrimaryKeyValue())
+			var publishKeys = []string{res.ToParam()}
+			var scope = publish.DB.NewScope(record)
+			for _, primaryField := range scope.PrimaryFields() {
+				publishKeys = append(publishKeys, fmt.Sprint(primaryField.Field.Interface()))
+			}
+			return strings.Join(publishKeys, "__")
 		})
 
 		res.GetAdmin().RegisterFuncMap("is_publish_event_resource", func(res *admin.Resource) bool {
