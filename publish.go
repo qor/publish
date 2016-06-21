@@ -249,7 +249,7 @@ func (pb Publish) searchWithPublishIDs(db *gorm.DB, Admin *admin.Admin, publishI
 	for name, value := range values {
 		res := Admin.GetResource(name)
 		result := res.NewSlice()
-		if pb.search(db, res, value).First(result).Error == nil {
+		if pb.search(db, res, value).Find(result).Error == nil {
 			resultValues := reflect.Indirect(reflect.ValueOf(result))
 			for i := 0; i < resultValues.Len(); i++ {
 				results = append(results, resultValues.Index(i).Interface())
