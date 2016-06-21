@@ -56,7 +56,7 @@ func (publish *Publish) registerWorkerJob() {
 			Group: "Publish",
 			Handler: func(argument interface{}, job worker.QorJobInterface) error {
 				if argu, ok := argument.(*QorWorkerArgument); ok {
-					records := pc.searchWithPublishIDs(publish.DraftDB(), w.Admin, argu.IDs)
+					records := publish.searchWithPublishIDs(publish.DraftDB(), w.Admin, argu.IDs)
 					publish.Logger(&workerJobLogger{job: job}).Publish(records...)
 				}
 				return nil
@@ -69,7 +69,7 @@ func (publish *Publish) registerWorkerJob() {
 			Group: "Publish",
 			Handler: func(argument interface{}, job worker.QorJobInterface) error {
 				if argu, ok := argument.(*QorWorkerArgument); ok {
-					records := pc.searchWithPublishIDs(publish.DraftDB(), w.Admin, argu.IDs)
+					records := publish.searchWithPublishIDs(publish.DraftDB(), w.Admin, argu.IDs)
 					publish.Logger(&workerJobLogger{job: job}).Discard(records...)
 				}
 				return nil
