@@ -96,8 +96,8 @@ func (publish *Publish) registerWorkerJob() {
 
 					for _, id := range argu.IDs {
 						if keys := strings.Split(id, "__"); len(keys) == 2 {
-							name, id := keys[0], keys[1]
-							values[name] = append(values[name], id)
+							name, primaryValues := keys[0], keys[1:]
+							values[name] = append(values[name], primaryValues)
 						}
 					}
 

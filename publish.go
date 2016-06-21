@@ -5,6 +5,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/qor/admin"
+	"github.com/qor/qor"
 	"github.com/qor/qor/resource"
 	"github.com/qor/qor/utils"
 	"github.com/qor/worker"
@@ -62,8 +63,9 @@ func (s Status) ConfigureQorResource(res resource.Resourcer) {
 
 // Publish defined a publish struct
 type Publish struct {
-	WorkerScheduler *worker.Worker
 	DB              *gorm.DB
+	SearchHandler   func(db *gorm.DB, context *qor.Context) *gorm.DB
+	WorkerScheduler *worker.Worker
 	logger          LoggerInterface
 	deleteCallback  func(*gorm.Scope)
 }
@@ -153,7 +155,11 @@ func New(db *gorm.DB) *Publish {
 
 	db.Callback().RowQuery().Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
 	db.Callback().Query().Before("gorm:query").Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
-	return &Publish{DB: db, deleteCallback: deleteCallback, logger: Logger}
+
+	searchHandler := func(db *gorm.DB, context *qor.Context) *gorm.DB {
+		return db
+	}
+	return &Publish{SearchHandler: searchHandler, DB: db, deleteCallback: deleteCallback, logger: Logger}
 }
 
 // DraftTableName get draft table name of passed in string

@@ -118,8 +118,8 @@ func (db *publishController) PublishOrDiscard(context *admin.Context) {
 
 		for _, id := range ids {
 			if keys := strings.Split(id, "__"); len(keys) == 2 {
-				name, id := keys[0], keys[1]
-				values[name] = append(values[name], id)
+				name, primaryValues := keys[0], keys[1:]
+				values[name] = append(values[name], primaryValues...)
 			}
 		}
 
