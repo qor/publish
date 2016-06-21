@@ -26,7 +26,7 @@ type visiblePublishResourceInterface interface {
 	VisiblePublishResource(*qor.Context) bool
 }
 
-func (db *publishController) Preview(context *admin.Context) {
+func (pc *publishController) Preview(context *admin.Context) {
 	type resource struct {
 		*admin.Resource
 		Value interface{}
@@ -34,7 +34,7 @@ func (db *publishController) Preview(context *admin.Context) {
 
 	var drafts = []resource{}
 
-	draftDB := db.DB.Set(publishDraftMode, true).Unscoped()
+	draftDB := pc.DB.Set(publishDraftMode, true).Unscoped()
 	for _, res := range context.Admin.GetResources() {
 		if visibleInterface, ok := res.Value.(visiblePublishResourceInterface); ok {
 			if !visibleInterface.VisiblePublishResource(context.Context) {
@@ -47,7 +47,7 @@ func (db *publishController) Preview(context *admin.Context) {
 		if res.HasPermission(PublishPermission, context.Context) {
 			results := res.NewSlice()
 			if IsPublishableModel(res.Value) || IsPublishEvent(res.Value) {
-				if draftDB.Unscoped().Where("publish_status = ?", DIRTY).Find(results).RowsAffected > 0 {
+				if pc.SearchHandler(draftDB.Where("publish_status = ?", DIRTY), context.Context).Find(results).RowsAffected > 0 {
 					drafts = append(drafts, resource{
 						Resource: res,
 						Value:    results,
@@ -59,7 +59,7 @@ func (db *publishController) Preview(context *admin.Context) {
 	context.Execute("publish_drafts", drafts)
 }
 
-func (db *publishController) Diff(context *admin.Context) {
+func (pc *publishController) Diff(context *admin.Context) {
 	var (
 		publishKeys   []string
 		primaryValues []interface{}
@@ -74,26 +74,26 @@ func (db *publishController) Diff(context *admin.Context) {
 	}
 
 	draft := res.NewStruct()
-	var scope = db.DB.NewScope(draft)
+	var scope = pc.DB.NewScope(draft)
 	for _, primaryField := range scope.PrimaryFields() {
 		publishKeys = append(publishKeys, fmt.Sprintf("%v = ?", scope.Quote(primaryField.DBName)))
 	}
 
-	db.DB.Set(publishDraftMode, true).Unscoped().Where(strings.Join(publishKeys, " AND "), primaryValues...).First(draft)
+	pc.DB.Set(publishDraftMode, true).Unscoped().Where(strings.Join(publishKeys, " AND "), primaryValues...).First(draft)
 
 	production := res.NewStruct()
-	db.DB.Set(publishDraftMode, false).Unscoped().Where(strings.Join(publishKeys, " AND "), primaryValues...).First(production)
+	pc.DB.Set(publishDraftMode, false).Unscoped().Where(strings.Join(publishKeys, " AND "), primaryValues...).First(production)
 
 	results := map[string]interface{}{"Production": production, "Draft": draft, "Resource": res}
 
 	fmt.Fprintf(context.Writer, string(context.Render("publish_diff", results)))
 }
 
-func (db *publishController) PublishOrDiscard(context *admin.Context) {
+func (pc *publishController) PublishOrDiscard(context *admin.Context) {
 	var request = context.Request
 	var ids = request.Form["checked_ids[]"]
 
-	if scheduler := db.Publish.WorkerScheduler; scheduler != nil {
+	if scheduler := pc.Publish.WorkerScheduler; scheduler != nil {
 		jobResource := scheduler.JobResource
 		result := jobResource.NewStruct().(worker.QorJobInterface)
 		if request.Form.Get("publish_type") == "discard" {
@@ -123,7 +123,7 @@ func (db *publishController) PublishOrDiscard(context *admin.Context) {
 			}
 		}
 
-		draftDB := db.DB.Set(publishDraftMode, true).Unscoped()
+		draftDB := pc.DB.Set(publishDraftMode, true).Unscoped()
 		for name, value := range values {
 			res := context.Admin.GetResource(name)
 			results := res.NewSlice()
@@ -136,9 +136,9 @@ func (db *publishController) PublishOrDiscard(context *admin.Context) {
 		}
 
 		if request.Form.Get("publish_type") == "publish" {
-			db.Publish.Publish(records...)
+			pc.Publish.Publish(records...)
 		} else if request.Form.Get("publish_type") == "discard" {
-			db.Publish.Discard(records...)
+			pc.Publish.Discard(records...)
 		}
 
 		http.Redirect(context.Writer, context.Request, context.Request.RequestURI, http.StatusFound)

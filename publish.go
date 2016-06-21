@@ -1,6 +1,7 @@
 package publish
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/jinzhu/gorm"
@@ -212,4 +213,25 @@ func (db Publish) Publish(records ...interface{}) {
 // Discard discard records
 func (db Publish) Discard(records ...interface{}) {
 	db.newResolver(records...).Discard()
+}
+
+func (pb Publish) search(db *gorm.DB, res *admin.Resource, ids []string) *gorm.DB {
+	var primaryKeys []string
+	var primaryValues [][][]interface{}
+	var scope = db.NewScope(res.Value)
+
+	for _, primaryField := range scope.PrimaryFields() {
+		primaryKeys = append(primaryKeys, primaryField.DBName)
+	}
+
+	for _, id := range ids {
+		var primaryValue [][]interface{}
+		for idx, value := range strings.Split(id, "__") {
+			primaryValue = append(primaryValue, []interface{}{primaryKeys[idx], value})
+		}
+		primaryValues = append(primaryValues, primaryValue)
+	}
+
+	sql := fmt.Sprintf("%v IN (%v)", toQueryCondition(scope, primaryKeys), toQueryMarks(primaryValues))
+	return db.Where(sql, toQueryValues(primaryValues)...)
 }
