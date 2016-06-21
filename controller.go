@@ -33,7 +33,7 @@ func (pc *publishController) Preview(context *admin.Context) {
 
 	var drafts = []resource{}
 
-	draftDB := pc.DB.Set(publishDraftMode, true).Unscoped()
+	draftDB := context.GetDB().Set(publishDraftMode, true).Unscoped()
 	for _, res := range context.Admin.GetResources() {
 		if visibleInterface, ok := res.Value.(visiblePublishResourceInterface); ok {
 			if !visibleInterface.VisiblePublishResource(context.Context) {
@@ -66,10 +66,10 @@ func (pc *publishController) Diff(context *admin.Context) {
 	)
 
 	draft := res.NewStruct()
-	pc.search(pc.DB.Set(publishDraftMode, true), res, [][]string{params[1:]}).First(draft)
+	pc.search(context.GetDB().Set(publishDraftMode, true), res, [][]string{params[1:]}).First(draft)
 
 	production := res.NewStruct()
-	pc.search(pc.DB.Set(publishDraftMode, false), res, [][]string{params[1:]}).First(production)
+	pc.search(context.GetDB().Set(publishDraftMode, false), res, [][]string{params[1:]}).First(production)
 
 	results := map[string]interface{}{"Production": production, "Draft": draft, "Resource": res}
 	fmt.Fprintf(context.Writer, string(context.Render("publish_diff", results)))
@@ -99,7 +99,7 @@ func (pc *publishController) PublishOrDiscard(context *admin.Context) {
 
 		http.Redirect(context.Writer, context.Request, context.URLFor(jobResource), http.StatusFound)
 	} else {
-		records := pc.searchWithPublishIDs(pc.DB.Set(publishDraftMode, true), context.Admin, ids)
+		records := pc.searchWithPublishIDs(context.GetDB().Set(publishDraftMode, true), context.Admin, ids)
 
 		if request.Form.Get("publish_type") == "publish" {
 			pc.Publish.Publish(records...)
