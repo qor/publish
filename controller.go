@@ -3,7 +3,6 @@ package publish
 import (
 	"fmt"
 	"net/http"
-	"reflect"
 	"strings"
 
 	"github.com/jinzhu/now"
@@ -61,31 +60,18 @@ func (pc *publishController) Preview(context *admin.Context) {
 
 func (pc *publishController) Diff(context *admin.Context) {
 	var (
-		publishKeys   []string
-		primaryValues []interface{}
-		resourceID    = context.Request.URL.Query().Get(":publish_unique_key")
-		params        = strings.Split(resourceID, "__")
-		name          = params[0]
-		res           = context.Admin.GetResource(name)
+		resourceID = context.Request.URL.Query().Get(":publish_unique_key")
+		params     = strings.Split(resourceID, "__") // name__primary_keys
+		res        = context.Admin.GetResource(params[0])
 	)
 
-	for _, value := range params[1:] {
-		primaryValues = append(primaryValues, value)
-	}
-
 	draft := res.NewStruct()
-	var scope = pc.DB.NewScope(draft)
-	for _, primaryField := range scope.PrimaryFields() {
-		publishKeys = append(publishKeys, fmt.Sprintf("%v = ?", scope.Quote(primaryField.DBName)))
-	}
-
-	pc.DB.Set(publishDraftMode, true).Unscoped().Where(strings.Join(publishKeys, " AND "), primaryValues...).First(draft)
+	pc.search(pc.DB.Set(publishDraftMode, true), res, [][]string{params[1:]}).First(draft)
 
 	production := res.NewStruct()
-	pc.DB.Set(publishDraftMode, false).Unscoped().Where(strings.Join(publishKeys, " AND "), primaryValues...).First(production)
+	pc.search(pc.DB.Set(publishDraftMode, false), res, [][]string{params[1:]}).First(production)
 
 	results := map[string]interface{}{"Production": production, "Draft": draft, "Resource": res}
-
 	fmt.Fprintf(context.Writer, string(context.Render("publish_diff", results)))
 }
 
@@ -113,27 +99,7 @@ func (pc *publishController) PublishOrDiscard(context *admin.Context) {
 
 		http.Redirect(context.Writer, context.Request, context.URLFor(jobResource), http.StatusFound)
 	} else {
-		var records = []interface{}{}
-		var values = map[string][]string{}
-
-		for _, id := range ids {
-			if keys := strings.Split(id, "__"); len(keys) == 2 {
-				name, primaryValues := keys[0], keys[1:]
-				values[name] = append(values[name], primaryValues...)
-			}
-		}
-
-		draftDB := pc.DB.Set(publishDraftMode, true).Unscoped()
-		for name, value := range values {
-			res := context.Admin.GetResource(name)
-			results := res.NewSlice()
-			if draftDB.Find(results, fmt.Sprintf("%v IN (?)", res.PrimaryDBName()), value).Error == nil {
-				resultValues := reflect.Indirect(reflect.ValueOf(results))
-				for i := 0; i < resultValues.Len(); i++ {
-					records = append(records, resultValues.Index(i).Interface())
-				}
-			}
-		}
+		records := pc.searchWithPublishIDs(pc.DB.Set(publishDraftMode, true), context.Admin, ids)
 
 		if request.Form.Get("publish_type") == "publish" {
 			pc.Publish.Publish(records...)

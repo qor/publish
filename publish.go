@@ -158,7 +158,7 @@ func New(db *gorm.DB) *Publish {
 	db.Callback().Query().Before("gorm:query").Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
 
 	searchHandler := func(db *gorm.DB, context *qor.Context) *gorm.DB {
-		return db
+		return db.Unscoped()
 	}
 	return &Publish{SearchHandler: searchHandler, DB: db, deleteCallback: deleteCallback, logger: Logger}
 }
@@ -174,48 +174,48 @@ func OriginalTableName(table string) string {
 }
 
 // AutoMigrate run auto migrate in draft tables
-func (db *Publish) AutoMigrate(values ...interface{}) {
+func (pb *Publish) AutoMigrate(values ...interface{}) {
 	for _, value := range values {
-		tableName := db.DB.NewScope(value).TableName()
-		db.DraftDB().Table(DraftTableName(tableName)).AutoMigrate(value)
+		tableName := pb.DB.NewScope(value).TableName()
+		pb.DraftDB().Table(DraftTableName(tableName)).AutoMigrate(value)
 	}
 }
 
 // ProductionDB get db in production mode
-func (db Publish) ProductionDB() *gorm.DB {
-	return db.DB.Set(publishDraftMode, false)
+func (pb Publish) ProductionDB() *gorm.DB {
+	return pb.DB.Set(publishDraftMode, false)
 }
 
 // DraftDB get db in draft mode
-func (db Publish) DraftDB() *gorm.DB {
-	return db.DB.Set(publishDraftMode, true)
+func (pb Publish) DraftDB() *gorm.DB {
+	return pb.DB.Set(publishDraftMode, true)
 }
 
 // DraftDB get db in draft mode
-func (db Publish) Logger(l LoggerInterface) *Publish {
+func (pb Publish) Logger(l LoggerInterface) *Publish {
 	return &Publish{
-		WorkerScheduler: db.WorkerScheduler,
-		DB:              db.DB,
+		WorkerScheduler: pb.WorkerScheduler,
+		DB:              pb.DB,
 		logger:          l,
-		deleteCallback:  db.deleteCallback,
+		deleteCallback:  pb.deleteCallback,
 	}
 }
 
-func (db Publish) newResolver(records ...interface{}) *resolver {
-	return &resolver{publish: db, Records: records, DB: db.DB, Dependencies: map[string]*dependency{}}
+func (pb Publish) newResolver(records ...interface{}) *resolver {
+	return &resolver{publish: pb, Records: records, DB: pb.DB, Dependencies: map[string]*dependency{}}
 }
 
 // Publish publish records
-func (db Publish) Publish(records ...interface{}) {
-	db.newResolver(records...).Publish()
+func (pb Publish) Publish(records ...interface{}) {
+	pb.newResolver(records...).Publish()
 }
 
 // Discard discard records
-func (db Publish) Discard(records ...interface{}) {
-	db.newResolver(records...).Discard()
+func (pb Publish) Discard(records ...interface{}) {
+	pb.newResolver(records...).Discard()
 }
 
-func (pb Publish) search(db *gorm.DB, res *admin.Resource, ids []string) *gorm.DB {
+func (pb Publish) search(db *gorm.DB, res *admin.Resource, ids [][]string) *gorm.DB {
 	var primaryKeys []string
 	var primaryValues [][][]interface{}
 	var scope = db.NewScope(res.Value)
@@ -226,12 +226,36 @@ func (pb Publish) search(db *gorm.DB, res *admin.Resource, ids []string) *gorm.D
 
 	for _, id := range ids {
 		var primaryValue [][]interface{}
-		for idx, value := range strings.Split(id, "__") {
+		for idx, value := range id {
 			primaryValue = append(primaryValue, []interface{}{primaryKeys[idx], value})
 		}
 		primaryValues = append(primaryValues, primaryValue)
 	}
 
 	sql := fmt.Sprintf("%v IN (%v)", toQueryCondition(scope, primaryKeys), toQueryMarks(primaryValues))
-	return db.Where(sql, toQueryValues(primaryValues)...)
+	return pb.SearchHandler(db, nil).Where(sql, toQueryValues(primaryValues)...)
+}
+
+func (pb Publish) searchWithPublishIDs(db *gorm.DB, Admin *admin.Admin, publishIDs []string) (results []interface{}) {
+	var values = map[string][][]string{}
+
+	for _, publishID := range publishIDs {
+		if primaryValues := strings.Split(publishID, "__"); len(primaryValues) >= 2 {
+			name := primaryValues[0]
+			values[name] = append(values[name], primaryValues[1:])
+		}
+	}
+
+	for name, value := range values {
+		res := Admin.GetResource(name)
+		result := res.NewSlice()
+		if pb.search(db, res, value).First(result).Error == nil {
+			resultValues := reflect.Indirect(reflect.ValueOf(result))
+			for i := 0; i < resultValues.Len(); i++ {
+				results = append(results, resultValues.Index(i).Interface())
+			}
+		}
+	}
+
+	return
 }
