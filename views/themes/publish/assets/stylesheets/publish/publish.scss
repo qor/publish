@@ -25,6 +25,14 @@
   }
 }
 
+.qor-page-subnav__header + .qor-actions--publish{
+  padding: 20px 0;
+  .qor-publish__button-popover{
+    color: rgba(0, 0, 0, .87);
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),0 3px 1px -2px rgba(0,0,0,.2),0 1px 5px 0 rgba(0,0,0,.12);
+    background-color: #fff;
+  }
+}
 .qor-actions--publish{
   float: none;
   .qor-action--button{
@@ -32,10 +40,9 @@
   }
   .qor-publish__button-popover{
     color: #03a9f4;
-    margin-right: 32px;
+    margin: 0 32px;
   }
   .qor-publish__discard{
-    float: left;
     color: #ff4081;
   }
 }
@@ -50,6 +57,6 @@
     bottom: 20px;
   }
   .qor-publish__time{
-    color: rgba(0, 0, 0, .75);
+    color: rgba(0, 0, 0, .87);
   }
 }
