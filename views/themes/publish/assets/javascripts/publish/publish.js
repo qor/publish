@@ -146,7 +146,7 @@
           '<p class="hint">[[modalHint]]</p>' +
           '<div class="qor-field__datetimepicker qor-publish__datetimepicker">' +
             '<div class="mdl-textfield mdl-js-textfield">' +
-              '<input class="mdl-textfield__input qor-publish__time" id="qorPublishTime" type="text" placeholder="2010-12-01 00:00" />' +
+              '<input class="mdl-textfield__input qor-publish__time" id="qorPublishTime" type="text" placeholder="YYYY-MM-DD HH:MM" data-start-date="true" />' +
               '<label class="mdl-textfield__label" for="qorPublishTime"></label>' +
             '</div>' +
             '<div>' +
