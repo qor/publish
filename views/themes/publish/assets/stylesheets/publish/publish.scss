@@ -14,7 +14,7 @@
   }
 }
 
-.is-deleted,
+tr.is-deleted,
 .is-changed {
   background-color: #eee;
   .qor-table__content{
@@ -23,6 +23,10 @@
   a.qor-action__view{
     color: #FF1462;
   }
+}
+
+.qor-preview-popup .is-deleted {
+  text-decoration: line-through;
 }
 
 .qor-page-subnav__header + .qor-actions--publish{

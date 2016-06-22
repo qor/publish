@@ -56,7 +56,6 @@
       var $target = $(e.target);
       var isChecked = $('.qor-js-table').find('input:checkbox').not(options.toggleCheck).is(':checked');
       var data;
-      var $scheduleInput;
       var scheduleTime;
 
 
@@ -93,7 +92,6 @@
         this.$scheduleModal = $(window.Mustache.render(Publish.SCHEDULE, data)).appendTo('body');
         this.$scheduleModal.qorModal('show');
         window.componentHandler.upgradeElement(document.querySelector('.qor-publish__time'));
-        $scheduleInput = $(options.scheduleTime);
 
         this.$scheduleModal.trigger('enable');
 
