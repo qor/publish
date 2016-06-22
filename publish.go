@@ -121,7 +121,7 @@ func New(db *gorm.DB) *Publish {
 				}
 
 				var forceDraftTable bool
-				if forceDraft, ok = db.Get("publish:force_draft_table"); ok {
+				if forceDraft, ok := db.Get("publish:force_draft_table"); ok {
 					if forceMode, ok := forceDraft.(bool); ok && forceMode {
 						forceDraftTable = true
 					}
