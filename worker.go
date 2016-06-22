@@ -67,7 +67,7 @@ func (publish *Publish) registerWorkerJob() {
 		})
 
 		w.RegisterJob(&worker.Job{
-			Name:  "DiscardPublish",
+			Name:  "Discard",
 			Group: "Publish",
 			Handler: func(argument interface{}, job worker.QorJobInterface) error {
 				if argu, ok := argument.(*QorWorkerArgument); ok {

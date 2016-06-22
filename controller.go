@@ -84,7 +84,7 @@ func (pc *publishController) PublishOrDiscard(context *admin.Context) {
 		jobResource := scheduler.JobResource
 		result := jobResource.NewStruct().(worker.QorJobInterface)
 		if request.Form.Get("publish_type") == "discard" {
-			result.SetJob(scheduler.GetRegisteredJob("DiscardPublish"))
+			result.SetJob(scheduler.GetRegisteredJob("Discard"))
 		} else {
 			result.SetJob(scheduler.GetRegisteredJob("Publish"))
 		}
