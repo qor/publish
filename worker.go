@@ -17,11 +17,13 @@ func (job workerJobLogger) Print(results ...interface{}) {
 	job.job.AddLog(fmt.Sprint(results...))
 }
 
+// QorWorkerArgument used for qor publish job's argument
 type QorWorkerArgument struct {
 	IDs []string
 	worker.Schedule
 }
 
+// SetWorker set publish's worker
 func (publish *Publish) SetWorker(w *worker.Worker) {
 	publish.WorkerScheduler = w
 	publish.registerWorkerJob()

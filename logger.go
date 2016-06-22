@@ -10,10 +10,12 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// LoggerInterface logger interface used to print publish logs
 type LoggerInterface interface {
 	Print(...interface{})
 }
 
+// Logger default logger used to print publish logs
 var Logger LoggerInterface
 
 func init() {

@@ -121,8 +121,8 @@ func New(db *gorm.DB) *Publish {
 				}
 
 				var forceDraftTable bool
-				if forceDraftTable, ok := db.Get("publish:force_draft_table"); ok {
-					if forceMode, ok := forceDraftTable.(bool); ok && forceMode {
+				if forceDraft, ok = db.Get("publish:force_draft_table"); ok {
+					if forceMode, ok := forceDraft.(bool); ok && forceMode {
 						forceDraftTable = true
 					}
 				}
@@ -191,7 +191,7 @@ func (pb Publish) DraftDB() *gorm.DB {
 	return pb.DB.Set(publishDraftMode, true)
 }
 
-// DraftDB get db in draft mode
+// Logger set logger that used to print publish logs
 func (pb Publish) Logger(l LoggerInterface) *Publish {
 	return &Publish{
 		WorkerScheduler: pb.WorkerScheduler,

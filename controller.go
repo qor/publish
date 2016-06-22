@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	// PublishPermission publish permission
 	PublishPermission roles.PermissionMode = "publish"
 )
 
