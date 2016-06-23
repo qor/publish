@@ -6,7 +6,11 @@
 
     <div>
       {{range $res, $primaryValues := .Value}}
-        {{$res.Name}} : {{$primaryValues}}<br>
+        <label>{{$res.Name}} :</label>
+        {{range $primaryValue := $primaryValues}}
+          {{$primaryValue}} ;
+        {{end}}
+        <br>
       {{end}}
     </div>
   </div>

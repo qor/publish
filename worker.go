@@ -38,12 +38,12 @@ func (publish *Publish) registerWorkerJob() {
 
 		qorWorkerArgumentResource := w.Admin.NewResource(&QorWorkerArgument{})
 		qorWorkerArgumentResource.Meta(&admin.Meta{Name: "IDs", Type: "publish_job_argument", Valuer: func(record interface{}, context *qor.Context) interface{} {
-			var values = map[*admin.Resource][]string{}
+			var values = map[*admin.Resource][][]string{}
 
 			if workerArgument, ok := record.(*QorWorkerArgument); ok {
 				for _, id := range workerArgument.IDs {
-					if keys := strings.Split(id, "__"); len(keys) == 2 {
-						name, id := keys[0], keys[1]
+					if keys := strings.Split(id, "__"); len(keys) >= 2 {
+						name, id := keys[0], keys[1:]
 						recordRes := w.Admin.GetResource(name)
 						values[recordRes] = append(values[recordRes], id)
 					}
