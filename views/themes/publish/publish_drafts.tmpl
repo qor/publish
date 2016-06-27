@@ -29,7 +29,7 @@
               <tr>
                 <th>
                   <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" title="{{t "qor_admin.publish.check_all" "Check All"}}">
-                    <input type="checkbox" class="mdl-checkbox__input qor-js-check-all">
+                    <input type="checkbox" class="mdl-checkbox__input qor-js-check-all ignore-dirtyform">
                   </label>
                 </th>
 
@@ -48,7 +48,7 @@
                 <tr{{if $record.DeletedAt}} class="is-deleted"{{end}} data-primary-key="{{$key}}">
                   <td>
                     <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect">
-                      <input type="checkbox" class="mdl-checkbox__input" name="checked_ids[]" value="{{$key}}">
+                      <input type="checkbox" class="mdl-checkbox__input ignore-dirtyform" name="checked_ids[]" value="{{$key}}">
                     </label>
                   </td>
 
