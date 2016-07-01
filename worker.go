@@ -6,6 +6,7 @@ import (
 
 	"github.com/qor/admin"
 	"github.com/qor/qor"
+	"github.com/qor/roles"
 	"github.com/qor/worker"
 )
 
@@ -54,8 +55,9 @@ func (publish *Publish) registerWorkerJob() {
 		}})
 
 		w.RegisterJob(&worker.Job{
-			Name:  "Publish",
-			Group: "Publish",
+			Name:       "Publish",
+			Group:      "Publish",
+			Permission: roles.Deny(roles.Read, roles.Anyone),
 			Handler: func(argument interface{}, job worker.QorJobInterface) error {
 				if argu, ok := argument.(*QorWorkerArgument); ok {
 					records := publish.searchWithPublishIDs(publish.DraftDB(), w.Admin, argu.IDs)
@@ -67,8 +69,9 @@ func (publish *Publish) registerWorkerJob() {
 		})
 
 		w.RegisterJob(&worker.Job{
-			Name:  "Discard",
-			Group: "Publish",
+			Name:       "Discard",
+			Group:      "Publish",
+			Permission: roles.Deny(roles.Read, roles.Anyone),
 			Handler: func(argument interface{}, job worker.QorJobInterface) error {
 				if argu, ok := argument.(*QorWorkerArgument); ok {
 					records := publish.searchWithPublishIDs(publish.DraftDB(), w.Admin, argu.IDs)
