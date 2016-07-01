@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jinzhu/gorm"
+	"github.com/qor/qor"
 )
 
 // EventInterface defined methods needs for a publish event
@@ -78,6 +79,6 @@ func (publishEvent *PublishEvent) Discard(db *gorm.DB) error {
 }
 
 // VisiblePublishResource force to display publish event in publish drafts even it is hidden in the menus
-func (PublishEvent) VisiblePublishResource() bool {
+func (PublishEvent) VisiblePublishResource(*qor.Context) bool {
 	return true
 }
