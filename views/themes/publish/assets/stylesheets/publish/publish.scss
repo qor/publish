@@ -29,11 +29,6 @@ tr.is-deleted,
   text-decoration: line-through;
 }
 
-.qor-page-subnav__header + .qor-actions--publish{
-  .qor-publish__button-popover{
-    color: rgba(0, 0, 0, .87);
-  }
-}
 .qor-actions--publish{
   float: none;
   .qor-action--button{

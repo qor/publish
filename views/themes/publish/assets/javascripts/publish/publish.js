@@ -15,6 +15,8 @@
 
   var NAMESPACE = 'qor.publish';
   var EVENT_CLICK = 'click.' + NAMESPACE;
+  var CLASS_TABLE = '.qor-table';
+  var CLASS_ACTIONS = '.qor-actions--publish';
 
   function replaceText(str, data) {
     if (typeof str === 'string') {
@@ -40,7 +42,12 @@
 
     init: function () {
       this.$modal = $(replaceText(Publish.MODAL, this.options.text)).appendTo('body');
-      this.bind();
+
+      if (!$(CLASS_TABLE).size()) {
+        this.disableButtons();
+      } else {
+        this.bind();
+      }
     },
 
     bind: function () {
@@ -49,6 +56,10 @@
 
     unbind: function () {
       this.$element.off(EVENT_CLICK, this.click);
+    },
+
+    disableButtons: function () {
+      $(CLASS_ACTIONS).find('button').prop('disabled', true);
     },
 
     click: function (e) {
