@@ -11,7 +11,7 @@
 
   <div class="qor-page__body">
   {{if not .Result}}
-    <h2 class="qor-page__tips">{{t "qor_admin.publish.tips" "Currently there are no items you need to publish."}}</h2>
+    <h2 class="qor-page__tips">{{t "qor_admin.publish.no_items_publishable" "Currently there are no items you need to publish."}}</h2>
   {{end}}
     {{range $result := .Result}}
       {{$res := $result.Resource}}
