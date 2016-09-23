@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jinzhu/now"
 	"github.com/qor/admin"
 	"github.com/qor/qor"
 	"github.com/qor/qor/resource"
+	"github.com/qor/qor/utils"
 	"github.com/qor/roles"
 	"github.com/qor/worker"
 )
@@ -90,7 +90,7 @@ func (pc *publishController) PublishOrDiscard(context *admin.Context) {
 		}
 
 		workerArgument := &QorWorkerArgument{IDs: ids}
-		if t, err := now.Parse(request.Form.Get("scheduled_time")); err == nil {
+		if t, err := utils.ParseTime(request.Form.Get("scheduled_time"), context.Context); err == nil {
 			workerArgument.ScheduleTime = &t
 		}
 		result.SetSerializableArgumentValue(workerArgument)
