@@ -221,7 +221,7 @@ func (pb Publish) search(db *gorm.DB, res *admin.Resource, ids [][]string) *gorm
 	var scope = db.NewScope(res.Value)
 
 	for _, primaryField := range scope.PrimaryFields() {
-		primaryKeys = append(primaryKeys, primaryField.DBName)
+		primaryKeys = append(primaryKeys, fmt.Sprintf("%v.%v", scope.TableName(), primaryField.DBName))
 	}
 
 	for _, id := range ids {
