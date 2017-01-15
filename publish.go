@@ -154,7 +154,7 @@ func New(db *gorm.DB) *Publish {
 		Register("publish:sync_to_production", syncUpdateFromProductionToDraft)
 	db.Callback().Update().Before("gorm:commit_or_rollback_transaction").Register("gorm:create_publish_event", createPublishEvent)
 
-	db.Callback().RowQuery().Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
+	db.Callback().RowQuery().Before("gorm:row_query").Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
 	db.Callback().Query().Before("gorm:query").Register("publish:set_table_in_draft_mode", setTableAndPublishStatus(false))
 
 	searchHandler := func(db *gorm.DB, context *qor.Context) *gorm.DB {
